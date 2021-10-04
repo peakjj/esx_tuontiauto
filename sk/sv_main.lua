@@ -7,7 +7,7 @@ TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
 local pedit = {
     [1] = {
-        pos = { x = 284.3, y = -3001.66, z = 5.66 },
+        pos = vector3(284.3, -3001.66, 5.66),
         pedmodel = "g_m_y_famca_01",
         heading = 297.26,
         luotu = false,
