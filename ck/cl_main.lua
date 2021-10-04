@@ -39,41 +39,42 @@ CreateThread(function()
     Wait(7000)
     while true do
         local wait = 1500
-        for i=1, #perse do
-           local coords = GetEntityCoords(PlayerPedId())
-           local lol = perse[i].pos
-           if not perse[i].luotu then
-                if Vdist(coords.x, coords.y, coords.z, lol.x, lol.y, lol.z) < 150.0 then
-                    RequestModel(GetHashKey(perse[i].pedmodel))
-                    while not HasModelLoaded(GetHashKey(perse[i].pedmodel)) do
-                        Citizen.Wait(1)
-                    end
-                    RequestAnimDict(perse[i].npcanimaatio)
-                    while not HasAnimDictLoaded(perse[i].npcanimaatio) do
-                        Citizen.Wait(1)
-                    end
-                    Wait(100)	
-                    local pedi = CreatePed(4, GetHashKey(perse[i].pedmodel), lol.x, lol.y, lol.z, perse[i].heading, false, true)
-                    SetPedCanRagdollFromPlayerImpact(pedi, false)
-                    SetPedCanEvasiveDive(pedi, false)
-                    SetPedCanBeTargetted(pedi, false)
-                    SetEntityInvincible(pedi, true)
-                    SetBlockingOfNonTemporaryEvents(pedi, true)
-                    TaskPlayAnim(pedi,perse[i].npcanimaatio,perse[i].npcanimaatio2,1.0, 1.0, -1, 9, 1.0, 0, 0, 0)
-                    perse[i].luotu = true
-                end
-            end
-            if Vdist(coords.x, coords.y, coords.z, lol.x, lol.y, lol.z) < 4.0 then
-                wait = 5
-                if not alotettu then
-                    teksti(lol, tostring("~g~E ~w~- juttele!"))
-                    if IsControlJustReleased(0, 38) then
-                        menu()
-                    end
-                else
-                    teksti(lol, tostring("~w~Hae ~r~ajoneuvo ~w~- !"))
-                end
-            end  
+        local playerPed = PlayerPedId()
+        local coords = GetEntityCoords(playerPed)
+        for k, v in pairs(perse) do
+            local lol = v.pos
+            if not v.luotu then
+                 if #(coords - lol) < 150.0 then
+                     RequestModel(GetHashKey(v.pedmodel))
+                     while not HasModelLoaded(GetHashKey(v.pedmodel)) do
+                         Wait(1)
+                     end
+                     RequestAnimDict(v.npcanimaatio)
+                     while not HasAnimDictLoaded(v.npcanimaatio) do
+                         Wait(1)
+                     end
+                     Wait(100)	
+                     local pedi = CreatePed(4, GetHashKey(v.pedmodel), lol.x, lol.y, lol.z, v.heading, false, true)
+                     SetPedCanRagdollFromPlayerImpact(pedi, false)
+                     SetPedCanEvasiveDive(pedi, false)
+                     SetPedCanBeTargetted(pedi, false)
+                     SetEntityInvincible(pedi, true)
+                     SetBlockingOfNonTemporaryEvents(pedi, true)
+                     TaskPlayAnim(pedi,v.npcanimaatio,v.npcanimaatio2,1.0, 1.0, -1, 9, 1.0, 0, 0, 0)
+                     v.luotu = true
+                 end
+             end
+             if #(coords - lol) < 4.0 then
+                 wait = 5
+                 if not alotettu then
+                     teksti(lol, tostring("~g~E ~w~- juttele!"))
+                     if IsControlJustReleased(0, 38) then
+                         menu()
+                     end
+                 else
+                     teksti(lol, tostring("~w~Hae ~r~ajoneuvo ~w~- !"))
+                 end
+             end  
         end
         Wait(wait)
     end
@@ -140,7 +141,7 @@ function alota()
             local coords22 = GetEntityCoords(PlayerPedId())
             if alotettu then
                 if not spawnattu then
-                    if Vdist(coords22.x, coords22.y, coords22.z, mistauto.coords) < 150.0 then --spawnataa vastku lähel, ettei despawnaa
+                    if #(coords22 - mistauto.coords) < 150.0 then --spawnataa vastku lähel, ettei despawnaa
                         kaara = hakumestat[mistautorandom].auto
                         local hash = GetHashKey(kaara)
                         RequestModel(hash)
@@ -162,9 +163,10 @@ function alota()
     end)
     CreateThread(function()
         while true do
-            local coords22 = GetEntityCoords(PlayerPedId())
+            local playerPed = PlayerPedId()
+            local coords22 = GetEntityCoords(playerPed)
             local wait2 = 2000
-            if Vdist(coords22.x, coords22.y, coords22.z, mistauto.coords) < 3.0 then
+            if #(coords22 - mistauto.coords) < 3.0 then
                 wait2 = 5
                 if not tiirikoi and alotettu and not autossa then
                     teksti(mistauto.coords, tostring("~r~E ~w~- tiirikoi!"))
@@ -172,7 +174,7 @@ function alota()
                         if not tiirikoi then --kunnon spaghetti koodia vittu
                             tiirikoi = true
                             TriggerServerEvent('karpo_tuontiauto:ilmotus', 1)
-                            TaskStartScenarioInPlace(PlayerPedId(), "PROP_HUMAN_BUM_BIN", 500)
+                            TaskStartScenarioInPlace(playerPed, "PROP_HUMAN_BUM_BIN", 500)
                             Wait(Config.tiirikointiaika*1000)
                             tiirikoitu()
                             break
@@ -190,10 +192,11 @@ function alota()
 end
 
 function tiirikoitu()
+    local playerPed = PlayerPedId()
     SetVehicleDoorsLocked(car, 1)
     tiirikoi = false
     autossa = true
-    ClearPedTasks(PlayerPedId())
+    ClearPedTasks(playerPed)
     RemoveBlip(hakublip)
     local myyntipaikka = math.random(1,#myyntimestat)
     local paikka = myyntimestat[myyntipaikka]
@@ -211,16 +214,16 @@ function tiirikoitu()
     CreateThread(function()
         while true do
             local wait3 = 1000
-            local homo = GetEntityCoords(PlayerPedId())
-            if Vdist(homo.x, homo.y, homo.z, paikka.coords) < 3.0 then
+            local homo = GetEntityCoords(playerPed)
+            if #(homo - paikka.coords) < 3.0 then
                 wait3 = 5
                 if not myyty then
-                    if IsPedInAnyVehicle(PlayerPedId()) then
+                    if IsPedInAnyVehicle(playerPed) then
                         teksti(paikka.coords, tostring("~g~E ~w~myy ajoneuvo!"))
-                        local munauto = GetVehiclePedIsIn(GetPlayerPed(-1), false)
+                        local munauto = GetVehiclePedIsIn(playerPed, false)
                         local rekkari = GetVehicleNumberPlateText(munauto)
                         if IsControlJustReleased(0, 38) then
-                            if GetVehiclePedIsIn(PlayerPedId(), false) == car then
+                            if GetVehiclePedIsIn(playerPed, false) == car then
                                 TriggerServerEvent('karpo_tuontiauto:myyauto', maksa)
                                 TriggerServerEvent('karpo_tuontiauto:ilmotus', 3)
                                 TriggerServerEvent('karpo_tuontiauto:aktiivinen', 0)
@@ -245,6 +248,7 @@ end
 
 
 function timeri(perse)
+    local playerPed = PlayerPedId()
     local aika22 = hakumestat[perse].aika
     CreateThread(function()
         while aika22 > 0 do
@@ -258,10 +262,10 @@ function timeri(perse)
         while true do
             Wait(2)
             if not autossa and alotettu then
-                teksti(GetEntityCoords(PlayerPedId()), '~w~Aika [~g~'..aika22..'~w~]')
+                teksti(GetEntityCoords(playerPed), '~w~Aika [~g~'..aika22..'~w~]')
             end
             if not autossa and alotettu then
-                if IsPedDeadOrDying(PlayerPedId()) then
+                if IsPedDeadOrDying(playerPed) then
                     alotettu = false
                     autossa = false
                     TriggerServerEvent('karpo_tuontiauto:aktiivinen', 0)
@@ -282,10 +286,10 @@ function timeri(perse)
         while true do
             Wait(Config.blipaika*1000)
             if autossa and alotettu then
-                local munauto = GetVehiclePedIsIn(GetPlayerPed(-1), false)
+                local munauto = GetVehiclePedIsIn(playerPed, false)
                 local rekkari = GetVehicleNumberPlateText(munauto)
-                if GetVehiclePedIsIn(PlayerPedId(), false) == car then
-                    local coords = GetEntityCoords(PlayerPedId())
+                if GetVehiclePedIsIn(playerPed, false) == car then
+                    local coords = GetEntityCoords(playerPed)
                     TriggerServerEvent('karpo_tuontiauto:poliisiblip', coords.x, coords.y, coords.z)
                 end
             end
